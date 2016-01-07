@@ -103,7 +103,11 @@ module MotionAsync
 
   def self.async(options={}, &block)
     MotionAsyncTask.create(options, &block).tap do |task|
-      task.execute []
+      if @parallel && (Android::Os::Build::VERSION::SDK_INT >= Android::Os::Build::VERSION_CODES::HONEYCOMB)
+        task.executeOnExecutor(Android::Os::AsyncTask::THREAD_POOL_EXECUTOR, [])
+      else
+        task.execute []
+      end
     end
   end
 
@@ -117,6 +121,14 @@ module MotionAsync
 
   def after(delay, options={}, &block)
     MotionAsync.after(delay, options, &block)
+  end
+
+  def self.parallel=(parallel)
+    @parallel = parallel
+  end
+
+  def self.parallel
+    @parallel
   end
 
 end
